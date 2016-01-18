@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">BleSoundDemo</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="receive">Receive</string>
+    <string name="abort">Abort</string>
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+    <string name="file_name">File saved as &lt;b>%s&lt;/b></string>
+    <string name="scanning">扫描中...</string>
+    <string name="scan_finish">扫描完成</string>
+    <string name="device_name">&lt;b>名称: &lt;/b> &lt;i>%1$s&lt;/i></string>
+    <string name="device_address">&lt;b>地址: &lt;/b> &lt;i>%1$s&lt;/i></string>
+</resources>
