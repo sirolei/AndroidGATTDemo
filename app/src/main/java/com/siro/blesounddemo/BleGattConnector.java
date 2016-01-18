@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.util.Log;
 
 import com.siro.blesounddemo.strategy.Connector;
 
@@ -18,20 +19,35 @@ import com.siro.blesounddemo.strategy.Connector;
  */
 public class BleGattConnector implements Connector<BluetoothDevice> {
 
-    private Context context;
+    private final String TAG = BleGattConnector.class.getSimpleName();
+
+    private static Context context;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothGatt mBluetoothGatt;
     private BluetoothGattCallback mCallback;
     private OnstateChangedListener<BluetoothDevice> mOnstateChangedListener;
     private BluetoothDevice mConnBluetoothDevice;
-    public BleGattConnector(Context context) {
-        this.context = context;
+    private static BleGattConnector instance;
+
+    private BleGattConnector() {
+    }
+
+    public static BleGattConnector getInstance(Context con) {
+        context = con;
+        if (instance == null) {
+            synchronized (BleGattConnector.class) {
+                if (instance == null) {
+                    instance = new BleGattConnector();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
     public void init() {
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager == null){
+        if (bluetoothManager == null) {
             return;
         }
 
@@ -40,12 +56,16 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         mCallback = new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                if (status == BluetoothGatt.GATT_SUCCESS){
-                    if (newState == BluetoothProfile.STATE_CONNECTED && mOnstateChangedListener != null){
-                        mOnstateChangedListener.onConnected(mConnBluetoothDevice);
+                Log.d(TAG, "connection state change " + status);
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        gatt.discoverServices();
+                        if (mOnstateChangedListener != null) {
+                            mOnstateChangedListener.onConnected(mConnBluetoothDevice);
+                        }
                     }
 
-                    if (newState == BluetoothProfile.STATE_DISCONNECTED && mOnstateChangedListener != null){
+                    if (newState == BluetoothProfile.STATE_DISCONNECTED && mOnstateChangedListener != null) {
                         mOnstateChangedListener.onDisConnected(mConnBluetoothDevice);
                     }
                 }
@@ -53,16 +73,16 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                if (mOnstateChangedListener != null){
+                if (mOnstateChangedListener != null) {
                     mOnstateChangedListener.onHook(characteristic);
                 }
             }
 
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                if (status == BluetoothGatt.GATT_SUCCESS){
+                if (status == BluetoothGatt.GATT_SUCCESS) {
                     enableGattService();
-                }else {
+                } else {
                     mConnBluetoothDevice = null;
                 }
             }
@@ -70,10 +90,11 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
     }
 
-    protected void enableGattService(){
+    protected void enableGattService() {
         BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.RX_SERVICE_UUID);
-        if (rxService == null){
+        if (rxService == null) {
             //TODO bluetoothGattService 为空的时候需要处理
+            Log.d(TAG, "rxService null");
             return;
         }
 
@@ -81,6 +102,7 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
         if (txChar == null) {
             //TODO txChar 为空的时候需要处理
+            Log.d(TAG, "txChar null");
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(txChar, true);
@@ -91,19 +113,21 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
     @Override
     public void connect(BluetoothDevice device) {
-        if (mBluetoothAdapter == null || device == null){
+        if (mBluetoothAdapter == null || device == null) {
             //TODO 连接时adapter为空或device为空时需要处理
+            Log.d(TAG, "mBluetoothAdapter or device null");
             return;
         }
 
-        if (!mBluetoothAdapter.isEnabled()){
+        if (!mBluetoothAdapter.isEnabled()) {
             //TODO 蓝牙没有打开时需要进行处理
+            Log.d(TAG, "mBluetoothAdapter not enabled");
             return;
         }
 
         mBluetoothGatt = device.connectGatt(context, false, mCallback);
 
-        if (mBluetoothGatt != null){
+        if (mBluetoothGatt != null) {
             mConnBluetoothDevice = device;
         }
     }
@@ -118,8 +142,10 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         this.mOnstateChangedListener = listener;
     }
 
-    protected void reset(){
+    protected void reset() {
         mConnBluetoothDevice = null;
+        mBluetoothGatt.disconnect();
+        mBluetoothGatt.close();
         mBluetoothGatt = null;
     }
 

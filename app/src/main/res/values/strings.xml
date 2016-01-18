@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">BleSoundDemo</string>
-    <string name="connect">Connect</string>
-    <string name="disconnect">Disconnect</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
     <string name="receive">Receive</string>
     <string name="abort">Abort</string>
     <string name="play">Play</string>

@@ -33,11 +33,11 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/receive"
-        android:id="@+id/btn_receive"
-        android:layout_alignTop="@+id/btn_connect"
+        android:text="@string/disconnect"
+        android:id="@+id/btn_disconnect"
+        android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"/>
 
     <RelativeLayout
         android:id="@+id/container_file_save"
@@ -68,6 +68,13 @@
             android:layout_alignBottom="@+id/tv_file_name"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/stop"
+            android:id="@+id/btn_stop_play"
+            android:layout_alignRight="@id/btn_play"
+            android:layout_below="@id/btn_play"/>
     </RelativeLayout>
 
 </RelativeLayout>

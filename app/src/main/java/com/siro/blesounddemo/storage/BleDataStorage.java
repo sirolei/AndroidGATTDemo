@@ -14,6 +14,22 @@ public class BleDataStorage implements Storage<BluetoothGattCharacteristic> {
 
     BlockingDeque<BluetoothGattCharacteristic> quenes;
 
+    private static BleDataStorage instance;
+
+    private BleDataStorage(){}
+
+    public static BleDataStorage getInstance(){
+        if (instance == null){
+            synchronized (BleDataStorage.class){
+                if (instance == null){
+                    instance = new BleDataStorage();
+                    instance.setUp();
+                }
+            }
+        }
+        return instance;
+    }
+
     @Override
     public void setUp() {
         quenes = new LinkedBlockingDeque<BluetoothGattCharacteristic>(100);
