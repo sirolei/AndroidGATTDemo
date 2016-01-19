@@ -1,25 +1,29 @@
 package com.siro.blesounddemo;
 
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import com.siro.blesounddemo.storage.BleDataStorage;
 import com.siro.blesounddemo.strategy.Producer;
 
-import java.util.Arrays;
-
 /**
  * Created by siro on 2016/1/18.
  */
-public class BleGattProducer extends Thread implements Producer<BluetoothGattCharacteristic> {
+public class BleGattProducer extends Thread implements Producer<byte[]> {
     private final String TAG = BleGattProducer.class.getSimpleName();
+    public final static int MSG_DATA = 101;
 
     BleDataStorage storage;
     public Handler mHandler;
+    int dataNum = -1;
+
+    byte[] fakeData = new byte[512];
+
+    public BleGattProducer() {
+        setup();
+    }
 
     @Override
     public void setup() {
@@ -27,9 +31,9 @@ public class BleGattProducer extends Thread implements Producer<BluetoothGattCha
     }
 
     @Override
-    public void produce(BluetoothGattCharacteristic characteristic) {
+    public void produce(byte[] data) {
         try {
-            storage.produce(characteristic);
+            storage.produce(data);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -42,8 +46,17 @@ public class BleGattProducer extends Thread implements Producer<BluetoothGattCha
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what){
-                    case 101:
-                        Log.d(TAG, "receive data: " + Arrays.toString(msg.getData().getByteArray("Data")));
+                    case MSG_DATA:
+                        byte[] data = msg.getData().getByteArray("Data");
+                        int serNum = data[0];
+                        if (dataNum != -1){
+                            for (int i = 0; i < serNum - dataNum -1; i++){
+                                produce(fakeData);
+                            }
+                        }
+                        produce(data);
+                        dataNum = serNum;
+//                        Log.d(TAG, "receive data: " + Arrays.toString(data));
                         break;
                     default:
                         break;
@@ -59,10 +72,8 @@ public class BleGattProducer extends Thread implements Producer<BluetoothGattCha
         msg.sendToTarget();
     }
 
-
     public void quit(){
         Looper looper = mHandler.getLooper();
         looper.quit();
-
     }
 }

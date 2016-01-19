@@ -1,18 +1,22 @@
 package com.siro.blesounddemo.storage;
 
-import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
 
 import com.siro.blesounddemo.strategy.Storage;
 
+import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by siro on 2016/1/15.
  */
-public class BleDataStorage implements Storage<BluetoothGattCharacteristic> {
+public class BleDataStorage implements Storage<byte[]> {
 
-    BlockingDeque<BluetoothGattCharacteristic> quenes;
+    private final String TAG = BleDataStorage.class.getSimpleName();
+    private final int BUFF_SIZE = 200;
+
+    BlockingDeque<byte[]> quenes;
 
     private static BleDataStorage instance;
 
@@ -32,16 +36,18 @@ public class BleDataStorage implements Storage<BluetoothGattCharacteristic> {
 
     @Override
     public void setUp() {
-        quenes = new LinkedBlockingDeque<BluetoothGattCharacteristic>(100);
+        quenes = new LinkedBlockingDeque<byte[]>(200);
     }
 
     @Override
-    public void produce(BluetoothGattCharacteristic product) throws InterruptedException {
+    public void produce(byte[] product) throws InterruptedException {
+        Log.d(TAG, "produce: " + Arrays.toString(product));
         quenes.put(product);
     }
 
     @Override
-    public BluetoothGattCharacteristic consume() throws InterruptedException {
+    public byte[] consume() throws InterruptedException {
+        Log.d(TAG, "consume: ");
         return quenes.take();
     }
 }

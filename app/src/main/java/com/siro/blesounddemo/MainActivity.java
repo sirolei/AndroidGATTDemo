@@ -22,6 +22,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Scanner.OnItemSelectedListner<BluetoothDevice>, Connector.OnstateChangedListener<BluetoothDevice> {
 
     private final String TAG = MainActivity.class.getSimpleName();
+    public final static int MSG_CONNECTED = 0;
+    public final static int MSG_DISCONNECTED = 1;
+    public final static int MSG_DATA = 2;
+
 
     private TextView tvData;
     private Button btnConnect;
@@ -33,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BleGattConnector connector;
     private BluetoothDevice mCurrentDevice;
     private BleGattProducer dataProducer;
+    private BleGattConsumer dataConsumer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dataProducer = new BleGattProducer();
         dataProducer.start();
+        dataConsumer = new BleGattConsumer();
+        dataConsumer.start();
     }
 
     @Override
@@ -104,13 +111,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
-                case 0:
+                case MSG_CONNECTED:
                     tvData.setText("已连接");
+                    dataConsumer.read();
                     break;
-                case 1:
+                case MSG_DISCONNECTED:
                     tvData.setText("已断开");
+                    dataConsumer.close();
                     break;
-                case 2:
+                case MSG_DATA:
                     tvData.setText(Arrays.toString(msg.getData().getByteArray("Data")));
                     break;
             }
@@ -121,25 +130,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onConnected(BluetoothDevice device) {
         Log.d(TAG, "onConnected");
         //TODO 连接以后处理
-        Message.obtain(handler,0).sendToTarget();
+        Message.obtain(handler,MSG_CONNECTED).sendToTarget();
     }
 
     @Override
     public void onDisConnected(BluetoothDevice device) {
         Log.d(TAG, "onDisconnected");
         //TODO 断开以后处理
-        Message.obtain(handler,1).sendToTarget();
+        Message.obtain(handler,MSG_DISCONNECTED).sendToTarget();
     }
 
     @Override
     public void onHook(Object object) {
         BluetoothGattCharacteristic characteristic = (BluetoothGattCharacteristic) object;
-        Message msg = Message.obtain(handler, 2);
+//        Log.d(TAG, Arrays.toString(characteristic.getValue()));
+        Message msg = Message.obtain(handler, MSG_DATA);
         Bundle bundle = new Bundle();
         bundle.putByteArray("Data", characteristic.getValue());
         msg.setData(bundle);
         msg.sendToTarget();
-        dataProducer.sendMessage(101, bundle);
+        dataProducer.sendMessage(BleGattProducer.MSG_DATA, bundle);
     }
 
 
@@ -148,5 +158,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         connector.reset();
         dataProducer.quit();
+        dataConsumer.quit();
     }
 }

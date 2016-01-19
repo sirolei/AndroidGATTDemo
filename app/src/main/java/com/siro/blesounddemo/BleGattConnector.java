@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import com.siro.blesounddemo.strategy.Connector;
@@ -73,6 +74,7 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                Log.d(TAG, "onCharacteristicChanged...");
                 if (mOnstateChangedListener != null) {
                     mOnstateChangedListener.onHook(characteristic);
                 }
@@ -81,6 +83,9 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        exchangeGattMtu(512);
+                    }
                     enableGattService();
                 } else {
                     mConnBluetoothDevice = null;
@@ -91,24 +96,28 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
     }
 
     protected void enableGattService() {
-        BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.RX_SERVICE_UUID);
+        BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.CYPLAS_SERVICE_UUID);
         if (rxService == null) {
             //TODO bluetoothGattService 为空的时候需要处理
             Log.d(TAG, "rxService null");
             return;
         }
 
-        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.TX_CHAR_UUID);
+        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.CYPLAS_CHAR_UUUIT);
 
         if (txChar == null) {
             //TODO txChar 为空的时候需要处理
             Log.d(TAG, "txChar null");
             return;
         }
-        mBluetoothGatt.setCharacteristicNotification(txChar, true);
-        BluetoothGattDescriptor descriptor = txChar.getDescriptor(DemoConst.CCCD);
-        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mBluetoothGatt.writeDescriptor(descriptor);
+        BluetoothGattDescriptor descriptor = txChar.getDescriptor(DemoConst.CYPLAS_CLIENT_CONFIG_UUID);
+        if (descriptor != null){
+            Log.d(TAG, "descriptor not null");
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }
+        boolean setChar = mBluetoothGatt.setCharacteristicNotification(txChar, true);
+        Log.d(TAG, "setNotification is enabled " + setChar);
     }
 
     @Override
@@ -125,10 +134,13 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
             return;
         }
 
-        mBluetoothGatt = device.connectGatt(context, false, mCallback);
+        if (mBluetoothGatt == null){
+            mBluetoothGatt = device.connectGatt(context, false, mCallback);
+        }
 
         if (mBluetoothGatt != null) {
             mConnBluetoothDevice = device;
+            mBluetoothGatt.connect();
         }
     }
 
@@ -147,6 +159,15 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
         mBluetoothGatt = null;
+    }
+
+    private void exchangeGattMtu(int mtu){
+        int retry = 5;
+        boolean status = false;
+        while (!status && retry > 0) {
+            status = mBluetoothGatt.requestMtu(mtu);
+            retry--;
+        }
     }
 
 }

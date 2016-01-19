@@ -20,4 +20,7 @@ public class DemoConst {
     public static final UUID RX_CHAR_UUID =  UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_CHAR_UUID =  UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
+    public static final UUID CYPLAS_SERVICE_UUID = UUID.fromString("0003a150-0000-1000-8000-00805f9b0131");
+    public static final UUID CYPLAS_CHAR_UUUIT = UUID.fromString("0003a151-0000-1000-8000-00805f9b0131");
+    public static final UUID CYPLAS_CLIENT_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 }
