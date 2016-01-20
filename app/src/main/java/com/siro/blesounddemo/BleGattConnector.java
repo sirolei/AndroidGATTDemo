@@ -167,8 +167,10 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
     protected void reset() {
         mConnBluetoothDevice = null;
-        mBluetoothGatt.disconnect();
-        mBluetoothGatt.close();
+        if (mBluetoothGatt != null){
+            mBluetoothGatt.disconnect();
+            mBluetoothGatt.close();
+        }
         mBluetoothGatt = null;
     }
 
