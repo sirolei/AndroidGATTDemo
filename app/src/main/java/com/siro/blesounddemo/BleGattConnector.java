@@ -91,6 +91,17 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
                     mConnBluetoothDevice = null;
                 }
             }
+
+            @Override
+            public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                Log.d(TAG, "onWrite status " + status);
+                Log.d(TAG, "onWrite descriptor " + descriptor.getUuid());
+            }
+
+            @Override
+            public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                super.onDescriptorRead(gatt, descriptor, status);
+            }
         };
 
     }
@@ -112,9 +123,9 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         }
         BluetoothGattDescriptor descriptor = txChar.getDescriptor(DemoConst.CYPLAS_CLIENT_CONFIG_UUID);
         if (descriptor != null){
-            Log.d(TAG, "descriptor not null");
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBluetoothGatt.writeDescriptor(descriptor);
+            boolean writeChar = mBluetoothGatt.writeDescriptor(descriptor);
+            Log.d(TAG, "descriptor not null " + writeChar);
         }
         boolean setChar = mBluetoothGatt.setCharacteristicNotification(txChar, true);
         Log.d(TAG, "setNotification is enabled " + setChar);

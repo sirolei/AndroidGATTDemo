@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BluetoothDevice mCurrentDevice;
     private BleGattProducer dataProducer;
     private BleGattConsumer dataConsumer;
-
+    private TextView loseRate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnPlay = (Button) findViewById(R.id.btn_play);
         btnStop = (Button) findViewById(R.id.btn_stop_play);
         mFilelayout = (RelativeLayout) findViewById(R.id.container_file_save);
+        loseRate = (TextView) findViewById(R.id.tv_lose_rate);
 
         btnConnect.setOnClickListener(this);
         btnDisconnect.setOnClickListener(this);
@@ -118,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case MSG_DISCONNECTED:
                     tvData.setText("已断开");
                     dataConsumer.close();
+                    loseRate.setText(String.format(getString(R.string.lose_rate), (int)dataProducer.receiveCount, (int)dataProducer.loseCoount));
+                    dataProducer.resetCount();
                     break;
                 case MSG_DATA:
                     tvData.setText(Arrays.toString(msg.getData().getByteArray("Data")));

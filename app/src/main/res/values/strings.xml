@@ -11,4 +11,5 @@
     <string name="scan_finish">扫描完成</string>
     <string name="device_name">&lt;b>名称: &lt;/b> &lt;i>%1$s&lt;/i></string>
     <string name="device_address">&lt;b>地址: &lt;/b> &lt;i>%1$s&lt;/i></string>
+    <string name="lose_rate">收到%1$d个,丢%2$d个</string>
 </resources>

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import com.siro.blesounddemo.storage.BleDataStorage;
 import com.siro.blesounddemo.strategy.Producer;
@@ -18,7 +19,8 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     BleDataStorage storage;
     public Handler mHandler;
     int dataNum = -1;
-
+    double receiveCount = 0;
+    double loseCoount = 0;
     byte[] fakeData = new byte[512];
 
     public BleGattProducer() {
@@ -52,9 +54,13 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
                         if (dataNum != -1){
                             for (int i = 0; i < serNum - dataNum -1; i++){
                                 produce(fakeData);
+                                loseCoount++;
+                                Log.d(TAG, "lose count " + loseCoount);
                             }
                         }
                         produce(data);
+                        receiveCount++;
+                        Log.d(TAG, "receive count " + receiveCount);
                         dataNum = serNum;
 //                        Log.d(TAG, "receive data: " + Arrays.toString(data));
                         break;
@@ -75,5 +81,14 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     public void quit(){
         Looper looper = mHandler.getLooper();
         looper.quit();
+    }
+
+    public double getLoseRate(){
+        return loseCoount / (loseCoount + receiveCount);
+    }
+
+    public void resetCount(){
+        loseCoount = 0;
+        receiveCount = 0;
     }
 }
