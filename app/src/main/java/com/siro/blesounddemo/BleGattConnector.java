@@ -15,6 +15,9 @@ import android.util.Log;
 
 import com.siro.blesounddemo.strategy.Connector;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by siro on 2016/1/15.
  */
@@ -81,12 +84,27 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
             }
 
             @Override
+            public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+                Log.d(TAG, "onMtuChanged " + mtu + " status " + status);
+            }
+
+            @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                Log.d(TAG, "onServices Discovered " + status);
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         exchangeGattMtu(512);
                     }
-                    enableGattService();
+                    // Confused.... why must invoke after a delay?
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            enableGattService();
+                        }
+                    }, 1000);
+//                    enableGattService();
+
                 } else {
                     mConnBluetoothDevice = null;
                 }
@@ -157,7 +175,9 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
     @Override
     public void disconnect(BluetoothDevice device) {
-        mBluetoothGatt.disconnect();
+        if (mBluetoothGatt != null){
+            mBluetoothGatt.disconnect();
+        }
     }
 
     @Override

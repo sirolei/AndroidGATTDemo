@@ -50,7 +50,8 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
                 switch (msg.what){
                     case MSG_DATA:
                         byte[] data = msg.getData().getByteArray("Data");
-                        int serNum = data[0];
+                        int serNum = data[0] &0x0ff;
+                        Log.d(TAG, "serNum : " + serNum);
                         if (dataNum != -1){
                             for (int i = 0; i < serNum - dataNum -1; i++){
                                 produce(fakeData);
@@ -90,5 +91,6 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     public void resetCount(){
         loseCoount = 0;
         receiveCount = 0;
+        dataNum = -1;
     }
 }
