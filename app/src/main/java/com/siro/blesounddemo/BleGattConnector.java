@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.siro.blesounddemo.strategy.Connector;
@@ -93,7 +94,12 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
                 Log.d(TAG, "onServices Discovered " + status);
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        exchangeGattMtu(512);
+                        String mtuSize = PreferenceManager.getDefaultSharedPreferences(context)
+                                .getString(context.getString(R.string.pref_mtu_key), context.getString(R.string.pref_mtu_default));
+                        Log.d(TAG, "mtu size is " + mtuSize);
+                        exchangeGattMtu(Integer.valueOf(mtuSize));
+                    }else {
+//                        gatt.writeCharacteristic();
                     }
                     // Confused.... why must invoke after a delay?
                     Timer timer = new Timer();
@@ -134,6 +140,7 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
 
         BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.CYPLAS_CHAR_UUUIT);
 
+
         if (txChar == null) {
             //TODO txChar 为空的时候需要处理
             Log.d(TAG, "txChar null");
@@ -147,6 +154,18 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         }
         boolean setChar = mBluetoothGatt.setCharacteristicNotification(txChar, true);
         Log.d(TAG, "setNotification is enabled " + setChar);
+    }
+
+    private void setConnectionInterval(){
+        BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.CYPLAS_SERVICE_UUID);
+        if (rxService == null) {
+            //TODO bluetoothGattService 为空的时候需要处理
+            Log.d(TAG, "rxService null");
+            return;
+        }
+
+        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.CYPLAS_CHAR_UUUIT);
+
     }
 
     @Override

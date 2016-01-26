@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pref_mtu_key" translatable="false">pref_mtu_key</string>
+    <string name="pref_mtu_title">Mtu size</string>
+    <string name="pref_mtu_default">20</string>
+</resources>

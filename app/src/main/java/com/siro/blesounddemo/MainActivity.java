@@ -2,12 +2,16 @@ package com.siro.blesounddemo;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -16,6 +20,7 @@ import android.widget.TextView;
 import com.siro.blesounddemo.exception.DemoException;
 import com.siro.blesounddemo.strategy.Connector;
 import com.siro.blesounddemo.strategy.Scanner;
+import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Arrays;
 
@@ -66,7 +71,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dataProducer.start();
         dataConsumer = new BleGattConsumer();
         dataConsumer.start();
+
+        Log.d(TAG, "cpu factory " + SystemInfoUtil.getCpuFactoryName());
     }
+
+
 
     @Override
     public void onClick(View v) {
@@ -120,7 +129,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case MSG_DISCONNECTED:
                     tvData.setText("已断开");
                     dataConsumer.close();
-                    loseRate.setText(String.format(getString(R.string.lose_rate), (int)dataProducer.receiveCount, (int)dataProducer.loseCoount));
+                    loseRate.setText(String.format(getString(R.string.lose_rate),
+                            dataProducer.receiveCount,
+                            dataProducer.loseCoount,
+                            dataProducer.endTime - dataProducer.beginTime));
                     dataProducer.resetCount();
                     break;
                 case MSG_DATA:
@@ -172,6 +184,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public boolean bindService(Intent service, ServiceConnection conn, int flags) {
+        return super.bindService(service, conn, flags);
+    }
+
+
+
+    @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop...");
@@ -187,5 +206,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         Log.d(TAG, "onRestoreInstanceState...");
         super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (R.id.action_setting == id){
+            startActivity(new Intent(this, SettingActivity.class));
+            return true;
+        }
+        return false;
     }
 }

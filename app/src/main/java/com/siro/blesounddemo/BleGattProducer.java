@@ -19,9 +19,11 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     BleDataStorage storage;
     public Handler mHandler;
     int dataNum = -1;
-    double receiveCount = 0;
-    double loseCoount = 0;
-    byte[] fakeData = new byte[512];
+    long receiveCount = 0;
+    long loseCoount = 0;
+    byte[] fakeData = new byte[20];
+    long beginTime = 0;
+    long endTime = 0;
 
     public BleGattProducer() {
         setup();
@@ -54,16 +56,19 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
                         Log.d(TAG, "serNum : " + serNum);
                         if (dataNum != -1){
                             for (int i = 0; i < serNum - dataNum -1; i++){
-                                produce(fakeData);
+//                                produce(fakeData);
                                 loseCoount++;
-                                Log.d(TAG, "lose count " + loseCoount);
+//                                Log.d(TAG, "lose count " + loseCoount);
                             }
+                        }else {
+                            beginTime = System.currentTimeMillis();
                         }
                         produce(data);
                         receiveCount++;
-                        Log.d(TAG, "receive count " + receiveCount);
+                        Log.d(TAG, "receive count " + receiveCount + " lose count " + loseCoount);
                         dataNum = serNum;
-//                        Log.d(TAG, "receive data: " + Arrays.toString(data));
+                        endTime = System.currentTimeMillis();
+//                        Log.d(TAG, "begin time " + beginTime + " end time " + endTime);
                         break;
                     default:
                         break;
@@ -92,5 +97,7 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
         loseCoount = 0;
         receiveCount = 0;
         dataNum = -1;
+        beginTime = 0;
+        endTime = 0;
     }
 }
