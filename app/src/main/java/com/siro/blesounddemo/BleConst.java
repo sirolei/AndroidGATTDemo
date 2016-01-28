@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Created by siro on 2016/1/15.
  */
-public class DemoConst {
+public class BleConst {
 
     /*
     * 蓝牙SPP连接uuid

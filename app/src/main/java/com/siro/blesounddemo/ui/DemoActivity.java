@@ -1,0 +1,203 @@
+package com.siro.blesounddemo.ui;
+
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.siro.blesounddemo.BleScanResultDialog;
+import com.siro.blesounddemo.R;
+import com.siro.blesounddemo.controller.BleGattController;
+import com.siro.blesounddemo.exception.DemoException;
+import com.siro.blesounddemo.model.DataCallBack;
+import com.siro.blesounddemo.model.OnBleStateChangeListener;
+import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
+import com.siro.blesounddemo.util.SystemInfoUtil;
+
+import java.util.Arrays;
+
+/**
+ * Created by siro on 2016/1/28.
+ */
+public class DemoActivity extends AppCompatActivity implements View.OnClickListener,
+        OnBleStateChangeListener, DataCallBack,
+        OnDeviceItemClickListner<BluetoothDevice> {
+
+    private final String TAG = MainActivity.class.getSimpleName();
+    public final static int MSG_CONNECTED = 0;
+    public final static int MSG_DISCONNECTED = 1;
+    public final static int MSG_DATA = 2;
+    public final static int MSG_START_SCAN_FAILED = 3;
+    public final static int MSG_START_CONN_FAILED = 4;
+
+    private TextView tvData;
+    private Button btnConnect;
+    private Button btnDisconnect;
+    private Button btnPlay;
+    private Button btnStop;
+    private TextView tvFilename;
+    private RelativeLayout mFilelayout;
+    private BluetoothDevice mCurrentDevice;
+    private TextView loseRate;
+    private BleGattController controller;
+    private BleScanResultDialog scanResultDialog;
+
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case MSG_CONNECTED:
+                    tvData.setText("已连接");
+                    break;
+                case MSG_DISCONNECTED:
+                    tvData.setText("已断开");
+                    break;
+                case MSG_DATA:
+                    tvData.setText(Arrays.toString(msg.getData().getByteArray("Data")));
+                case MSG_START_CONN_FAILED:
+                    tvData.setText("连接失败");
+                    break;
+                case MSG_START_SCAN_FAILED:
+                    tvData.setText("扫描失败");
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        tvData = (TextView) findViewById(R.id.tv_data);
+        tvFilename = (TextView) findViewById(R.id.tv_file_name);
+        btnConnect = (Button) findViewById(R.id.btn_connect);
+        btnDisconnect = (Button) findViewById(R.id.btn_disconnect);
+        btnPlay = (Button) findViewById(R.id.btn_play);
+        btnStop = (Button) findViewById(R.id.btn_stop_play);
+        mFilelayout = (RelativeLayout) findViewById(R.id.container_file_save);
+        loseRate = (TextView) findViewById(R.id.tv_lose_rate);
+
+        btnConnect.setOnClickListener(this);
+        btnDisconnect.setOnClickListener(this);
+        btnPlay.setOnClickListener(this);
+        btnStop.setOnClickListener(this);
+        Log.d(TAG, "cpu factory " + SystemInfoUtil.getCpuFactoryName());
+
+        controller = new BleGattController(this);
+        controller.setBleStateChangeListener(this);
+        controller.setControllerCallback(this);
+        scanResultDialog = new BleScanResultDialog();
+        scanResultDialog.setOnItemSelectedListener(this);
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!controller.init()){
+            Log.d(TAG, "controller init failed.");
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (controller != null){
+            controller.release();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id){
+            case R.id.btn_play:
+                break;
+            case R.id.btn_stop_play:
+                break;
+            case R.id.btn_connect:
+                if (mCurrentDevice == null){
+                    if (!controller.scan()){
+                        handler.obtainMessage(MSG_START_SCAN_FAILED).sendToTarget();
+                    }else {
+                        scanResultDialog.reset();
+                        scanResultDialog.show(getFragmentManager(), MainActivity.class.getSimpleName());
+                    }
+                }else {
+                    if (!controller.connect(mCurrentDevice)){
+                        handler.obtainMessage(MSG_START_CONN_FAILED).sendToTarget();
+                    }
+                }
+
+                break;
+            case R.id.btn_disconnect:
+                controller.disconnect(mCurrentDevice);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onDataReceive(Object object) {
+        BluetoothGattCharacteristic characteristic = (BluetoothGattCharacteristic) object;
+        Message msg = Message.obtain(handler, MSG_DATA);
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("Data", characteristic.getValue());
+        msg.setData(bundle);
+        msg.sendToTarget();
+    }
+
+    @Override
+    public void onConnected(BluetoothDevice device) {
+        Log.d(TAG, "onConnected");
+        //TODO 连接以后处理
+        Message.obtain(handler,MSG_CONNECTED).sendToTarget();
+        mCurrentDevice = device;
+    }
+
+    @Override
+    public void onDisconnected(BluetoothDevice device) {
+        Log.d(TAG, "onDisconnected");
+        //TODO 断开以后处理
+        Message.obtain(handler,MSG_DISCONNECTED).sendToTarget();
+    }
+
+    @Override
+    public void onScanFoundDevice(BluetoothDevice device) {
+        scanResultDialog.getMyAdapter().add(device);
+    }
+
+    @Override
+    public void onScanStart() {
+        scanResultDialog.changeState(BleScanResultDialog.UI_STATE_SCANNING);
+    }
+
+    @Override
+    public void onScanFinished() {
+        scanResultDialog.changeState(BleScanResultDialog.UI_STATE_FINISHED);
+    }
+
+    @Override
+    public void onDeviceChoose(BluetoothDevice device) {
+        controller.stopScan();
+        if (device != null){
+            controller.connect(device);
+        }
+    }
+
+    @Override
+    public void onException(DemoException exception) {
+
+    }
+}

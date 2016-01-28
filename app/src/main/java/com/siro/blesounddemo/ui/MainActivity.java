@@ -1,4 +1,4 @@
-package com.siro.blesounddemo;
+package com.siro.blesounddemo.ui;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -17,15 +17,19 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.siro.blesounddemo.BleGattConnector;
+import com.siro.blesounddemo.R;
+import com.siro.blesounddemo.data.consumer.BleGattConsumer;
+import com.siro.blesounddemo.data.producer.BleGattProducer;
 import com.siro.blesounddemo.exception.DemoException;
 import com.siro.blesounddemo.strategy.Connector;
-import com.siro.blesounddemo.strategy.Scanner;
+import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        Scanner.OnItemSelectedListner<BluetoothDevice>, Connector.OnstateChangedListener<BluetoothDevice> {
+        OnDeviceItemClickListner<BluetoothDevice>, Connector.OnstateChangedListener<BluetoothDevice> {
 
     private final String TAG = MainActivity.class.getSimpleName();
     public final static int MSG_CONNECTED = 0;
@@ -75,8 +79,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "cpu factory " + SystemInfoUtil.getCpuFactoryName());
     }
 
-
-
     @Override
     public void onClick(View v) {
         int id = v.getId();
@@ -87,9 +89,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_connect:
                 if (mCurrentDevice == null){
-                    BleScanner scanner = BleScanner.getDefault();
-                    scanner.setOnItemSelectedListener(this);
-                    scanner.show(getFragmentManager(), MainActivity.class.getSimpleName());
+//                    BleScanResultDialog scanner = BleScanResultDialog.getDefault();
+//                    scanner.setOnItemSelectedListener(this);
+//                    scanner.show(getFragmentManager(), MainActivity.class.getSimpleName());
                 }else {
                     onDeviceChoose(mCurrentDevice);
                 }

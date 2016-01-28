@@ -1,4 +1,4 @@
-package com.siro.blesounddemo.strategy;
+package com.siro.blesounddemo.data.storage;
 
 /**
  * Created by siro on 2016/1/15.

@@ -1,8 +1,6 @@
-package com.siro.blesounddemo.storage;
+package com.siro.blesounddemo.data.storage;
 
 import android.util.Log;
-
-import com.siro.blesounddemo.strategy.Storage;
 
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;

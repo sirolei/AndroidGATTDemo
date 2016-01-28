@@ -1,4 +1,4 @@
-package com.siro.blesounddemo;
+package com.siro.blesounddemo.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+
+import com.siro.blesounddemo.R;
 
 /**
  * Created by siro on 2016/1/25.

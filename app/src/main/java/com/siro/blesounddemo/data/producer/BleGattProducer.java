@@ -1,4 +1,4 @@
-package com.siro.blesounddemo;
+package com.siro.blesounddemo.data.producer;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -6,8 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.siro.blesounddemo.storage.BleDataStorage;
-import com.siro.blesounddemo.strategy.Producer;
+import com.siro.blesounddemo.data.storage.BleDataStorage;
 
 /**
  * Created by siro on 2016/1/18.
@@ -19,11 +18,11 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     BleDataStorage storage;
     public Handler mHandler;
     int dataNum = -1;
-    long receiveCount = 0;
-    long loseCoount = 0;
+    public long receiveCount = 0;
+    public long loseCoount = 0;
     byte[] fakeData = new byte[20];
-    long beginTime = 0;
-    long endTime = 0;
+    public long beginTime = 0;
+    public long endTime = 0;
 
     public BleGattProducer() {
         setup();

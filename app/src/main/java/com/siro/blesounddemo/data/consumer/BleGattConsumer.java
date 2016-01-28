@@ -1,9 +1,8 @@
-package com.siro.blesounddemo;
+package com.siro.blesounddemo.data.consumer;
 
 import android.util.Log;
 
-import com.siro.blesounddemo.storage.BleDataStorage;
-import com.siro.blesounddemo.strategy.Consumer;
+import com.siro.blesounddemo.data.storage.BleDataStorage;
 import com.siro.blesounddemo.util.FileUtil;
 
 import java.io.FileNotFoundException;

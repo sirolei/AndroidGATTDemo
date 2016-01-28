@@ -1,10 +1,7 @@
 package com.siro.blesounddemo;
 
 import android.app.DialogFragment;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
@@ -17,52 +14,35 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.siro.blesounddemo.strategy.OnItemClickListener;
-import com.siro.blesounddemo.strategy.Scanner;
+import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
 
 import java.util.ArrayList;
 
 /**
  * Created by siro on 2016/1/15.
  */
-public class BleScanner extends DialogFragment implements Scanner<BluetoothDevice>,BluetoothScanReceiver.OnBluetoothReceiveInterface {
+public class BleScanResultDialog extends DialogFragment {
 
     private final String TAG = DialogFragment.class.getSimpleName();
 
-    private BluetoothAdapter mBluetoothAdapter;
-    private OnItemSelectedListner<BluetoothDevice> listener;
-    private BluetoothScanReceiver receiver;
+    public static final int UI_STATE_SCANNING = 101;
+    public static final int UI_STATE_FINISHED = 102;
+    public static final int UI_STATE_IDLE = 103;
+
+    private OnDeviceItemClickListner<BluetoothDevice> listener;
     private MyAdapter myAdapter;
     private ArrayList<BluetoothDevice> arrayList;
     private ProgressBar progressBar;
     private TextView mTitleTv;
     private OnItemClickListener onItemClickListener;
 
-    public static BleScanner instance;
-
-    public static BleScanner getDefault(){
-        if (instance == null){
-            synchronized (BleScanner.class){
-                if (instance == null){
-                    instance = new BleScanner();
-                }
-            }
-        }
-
-        return instance;
+    public MyAdapter getMyAdapter() {
+        return myAdapter;
     }
 
-    @Override
     public void init() {
-        BluetoothManager bluetoothManager = (BluetoothManager) getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager == null){
-            Log.d(TAG, "blutoothManager null");
-            return;
-        }
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-        receiver = new BluetoothScanReceiver(this);
         arrayList = new ArrayList<BluetoothDevice>();
         onItemClickListener = new OnItemClickListener() {
             @Override
@@ -71,70 +51,46 @@ public class BleScanner extends DialogFragment implements Scanner<BluetoothDevic
                 if (listener != null){
                     listener.onDeviceChoose(arrayList.get(position));
                 }
-                // 停止扫描
-                stopScan();
-                dismiss();
             }
         };
     }
 
-    @Override
-    public void scan() {
-        if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()){
-            Log.d(TAG, "bluetoothAdapter null or not enabled");
-            Toast.makeText(getActivity(), "Bluetooth not enabled", Toast.LENGTH_SHORT).show();
-        }
-        mBluetoothAdapter.startDiscovery();
-    }
-
-    @Override
-    public void stopScan() {
-        if (mBluetoothAdapter != null && mBluetoothAdapter.isDiscovering()){
-            mBluetoothAdapter.cancelDiscovery();
-        }
-    }
-
-    @Override
-    public void setOnItemSelectedListener(OnItemSelectedListner listener) {
+    public void setOnItemSelectedListener(OnDeviceItemClickListner listener) {
         this.listener = listener;
     }
 
     @Override
-    public void onDiscoverStart() {
-        Log.d(TAG, "start discover ... ");
+    public void dismiss() {
+        if (listener != null){
+            listener.onDeviceChoose(null);
+        }
+        super.dismiss();
+    }
+
+    public void reset(){
+        changeState(UI_STATE_IDLE);
         myAdapter.clear();
-        progressBar.setVisibility(View.VISIBLE);
-        mTitleTv.setText(R.string.scanning);
     }
 
-    @Override
-    public void onDiscoverFinish() {
-        Log.d(TAG,  "finish discover ... ");
-        progressBar.setVisibility(View.GONE);
-        mTitleTv.setText(R.string.scan_finish);
+    public void changeState(int state){
+        switch (state){
+            case UI_STATE_FINISHED:
+                progressBar.setVisibility(View.GONE);
+                mTitleTv.setText(R.string.scan_finish);
+                break;
+            case UI_STATE_IDLE:
+                progressBar.setVisibility(View.GONE);
+                mTitleTv.setText("");
+                break;
+            case UI_STATE_SCANNING:
+                progressBar.setVisibility(View.VISIBLE);
+                mTitleTv.setText(R.string.scanning);
+                break;
+            default:
+                break;
+        }
+
     }
-
-    @Override
-    public void onDiscoverFound(BluetoothDevice device) {
-        Log.d(TAG, "found device " + device.getName());
-        myAdapter.add(device);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        receiver.registerBleReceiver(getActivity());
-        scan();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        receiver.unregisterBleReceiver(getActivity());
-        stopScan();
-    }
-
-
 
     @Nullable
     @Override
@@ -157,7 +113,7 @@ public class BleScanner extends DialogFragment implements Scanner<BluetoothDevic
         init();
     }
 
-    class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
 
         private ArrayList<BluetoothDevice> arrayList;
         private OnItemClickListener listener;

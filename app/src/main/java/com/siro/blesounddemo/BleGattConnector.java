@@ -131,14 +131,14 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
     }
 
     protected void enableGattService() {
-        BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.CYPLAS_SERVICE_UUID);
+        BluetoothGattService rxService = mBluetoothGatt.getService(BleConst.CYPLAS_SERVICE_UUID);
         if (rxService == null) {
             //TODO bluetoothGattService 为空的时候需要处理
             Log.d(TAG, "rxService null");
             return;
         }
 
-        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.CYPLAS_CHAR_UUUIT);
+        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(BleConst.CYPLAS_CHAR_UUUIT);
 
 
         if (txChar == null) {
@@ -146,7 +146,7 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
             Log.d(TAG, "txChar null");
             return;
         }
-        BluetoothGattDescriptor descriptor = txChar.getDescriptor(DemoConst.CYPLAS_CLIENT_CONFIG_UUID);
+        BluetoothGattDescriptor descriptor = txChar.getDescriptor(BleConst.CYPLAS_CLIENT_CONFIG_UUID);
         if (descriptor != null){
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             boolean writeChar = mBluetoothGatt.writeDescriptor(descriptor);
@@ -157,14 +157,14 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
     }
 
     private void setConnectionInterval(){
-        BluetoothGattService rxService = mBluetoothGatt.getService(DemoConst.CYPLAS_SERVICE_UUID);
+        BluetoothGattService rxService = mBluetoothGatt.getService(BleConst.CYPLAS_SERVICE_UUID);
         if (rxService == null) {
             //TODO bluetoothGattService 为空的时候需要处理
             Log.d(TAG, "rxService null");
             return;
         }
 
-        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(DemoConst.CYPLAS_CHAR_UUUIT);
+        BluetoothGattCharacteristic txChar = rxService.getCharacteristic(BleConst.CYPLAS_CHAR_UUUIT);
 
     }
 
@@ -204,7 +204,7 @@ public class BleGattConnector implements Connector<BluetoothDevice> {
         this.mOnstateChangedListener = listener;
     }
 
-    protected void reset() {
+    public void reset() {
         mConnBluetoothDevice = null;
         if (mBluetoothGatt != null){
             mBluetoothGatt.disconnect();

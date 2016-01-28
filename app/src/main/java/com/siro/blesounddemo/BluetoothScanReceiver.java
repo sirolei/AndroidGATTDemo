@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-class BluetoothScanReceiver extends BroadcastReceiver {
+public class BluetoothScanReceiver extends BroadcastReceiver {
 
         private OnBluetoothReceiveInterface listner;
 
@@ -19,7 +19,6 @@ class BluetoothScanReceiver extends BroadcastReceiver {
         public void onReceive(Context context, Intent intent) {
 
             if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)){
-
                 listner.onDiscoverStart();
             }
 

@@ -14,11 +14,14 @@ import java.util.HashMap;
 public class SystemInfoUtil {
 
     public static final String TAG = SystemInfoUtil.class.getSimpleName();
-    public static HashMap<String, String> cpuInfo = new HashMap<String, String>();
+    public static HashMap<String, String> cpuInfo;
     private static final String KEY_CPU_NAME = "Processor";
     private static final String KEY_CPU_FACTORY = "Hardware";
+
     static {
-        cpuInfo = getCpuInfo();
+        if (cpuInfo == null){
+            cpuInfo = getCpuInfo();
+        }
     }
 
     /**
