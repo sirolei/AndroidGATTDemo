@@ -84,7 +84,6 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
         * 注册回调
         * */
         receiver = new BluetoothScanReceiver(this);
-        receiver.registerBleReceiver(context);
         return true;
     }
 
@@ -96,15 +95,21 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
             }
         }
         mBluetoothAdapter = null;
+    }
 
+    public void registerReceiver() {
+        receiver.registerBleReceiver(context);
+    }
+
+    public void unregisterReceiver() {
         if (receiver != null) {
             receiver.unregisterBleReceiver(context);
         }
     }
 
     /*
-    * 扫描Ble设备
-    * */
+            * 扫描Ble设备
+            * */
     public boolean scan() {
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
             return false;
@@ -115,6 +120,7 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
             BluetoothLeScanner bleScanner = mBluetoothAdapter.getBluetoothLeScanner();
             if (bleScanner != null) {
                 bleScanner.startScan((ScanCallback) scanCallback);
+                onDiscoverStart();
                 return true;
             }
         }
@@ -124,12 +130,17 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             boolean isStartScan = mBluetoothAdapter.startLeScan((BluetoothAdapter.LeScanCallback) leCallback);
             if (isStartScan == true) {
+                onDiscoverStart();
                 return true;
             }
         }
 
         //Api18以下使用startDiscovery
-        return mBluetoothAdapter.startDiscovery();
+        boolean isStart = mBluetoothAdapter.startDiscovery();
+        if (isStart == true){
+            onDiscoverStart();
+        }
+        return isStart;
 
     }
 
@@ -147,6 +158,7 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
             BluetoothLeScanner bleScanner = mBluetoothAdapter.getBluetoothLeScanner();
             if (bleScanner != null) {
                 bleScanner.stopScan((ScanCallback) scanCallback);
+                onDiscoverFinish();
                 return;
             }
         }
@@ -154,13 +166,16 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
         //Api 18
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             mBluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) leCallback);
+            onDiscoverFinish();
             return;
         }
 
         //Api18以下
         if (mBluetoothAdapter != null && mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
+            onDiscoverFinish();
         }
+
     }
 
     @Override

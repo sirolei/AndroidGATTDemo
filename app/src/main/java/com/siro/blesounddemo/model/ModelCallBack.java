@@ -1,5 +1,5 @@
 package com.siro.blesounddemo.model;
 
-public interface DataCallBack {
+public interface ModelCallBack {
     public void onDataReceive(Object object);
 }

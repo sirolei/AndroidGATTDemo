@@ -5,13 +5,13 @@ package com.siro.blesounddemo.model;
  */
 abstract public class Model {
 
-    private DataCallBack callBack;
+    private ModelCallBack callBack;
 
-    public DataCallBack getCallBack() {
+    public ModelCallBack getCallBack() {
         return callBack;
     }
 
-    public void setCallBack(DataCallBack callBack) {
+    public void setCallBack(ModelCallBack callBack) {
         this.callBack = callBack;
     }
 

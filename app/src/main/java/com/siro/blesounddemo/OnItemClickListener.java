@@ -1,4 +1,4 @@
-package com.siro.blesounddemo.strategy;
+package com.siro.blesounddemo;
 
 import android.view.View;
 

@@ -37,7 +37,12 @@ public class BleGattModel extends BleModel {
 
     public BleGattModel(Context context) {
         super(context);
-        gattCallback = new BluetoothGattCallback() {
+        producer = new BleGattProducer();
+        consumer = new BleGattConsumer();
+    }
+
+    private BluetoothGattCallback newGattCallback(){
+        return new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                 Log.d(TAG, "connection state change " + status);
@@ -118,10 +123,7 @@ public class BleGattModel extends BleModel {
                 super.onReadRemoteRssi(gatt, rssi, status);
             }
         };
-        producer = new BleGattProducer();
-        consumer = new BleGattConsumer();
     }
-
 
     private void exchangeMtuSize(BluetoothGatt gatt, int size) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && SystemInfoUtil.getCpuFactoryName().contains("Qualcomm")) {
@@ -165,9 +167,15 @@ public class BleGattModel extends BleModel {
         if (device == null) {
             return false;
         }
-        mBluetoothGatt = device.connectGatt(getContext(), false, gattCallback);
+
+        if (mConnectDevice != device){
+            gattCallback = newGattCallback();
+            mBluetoothGatt = device.connectGatt(getContext(), false, gattCallback);
+        }
+
         if (mBluetoothGatt != null) {
             mConnectDevice = device;
+            mBluetoothGatt.connect();
             return true;
         }
         return false;
@@ -198,6 +206,13 @@ public class BleGattModel extends BleModel {
             consumer.quit();
         }
         isInit = false;
+
+        mConnectDevice = null;
+        if (mBluetoothGatt != null){
+            mBluetoothGatt.disconnect();
+            mBluetoothGatt.close();
+        }
+        mBluetoothGatt = null;
         super.releaseModel();
     }
 

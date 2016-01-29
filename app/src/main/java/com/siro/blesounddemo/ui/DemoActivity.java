@@ -15,10 +15,9 @@ import android.widget.TextView;
 import com.siro.blesounddemo.BleScanResultDialog;
 import com.siro.blesounddemo.R;
 import com.siro.blesounddemo.controller.BleGattController;
-import com.siro.blesounddemo.exception.DemoException;
-import com.siro.blesounddemo.model.DataCallBack;
+import com.siro.blesounddemo.model.ModelCallBack;
 import com.siro.blesounddemo.model.OnBleStateChangeListener;
-import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
+import com.siro.blesounddemo.model.OnDeviceItemClickListner;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Arrays;
@@ -27,10 +26,10 @@ import java.util.Arrays;
  * Created by siro on 2016/1/28.
  */
 public class DemoActivity extends AppCompatActivity implements View.OnClickListener,
-        OnBleStateChangeListener, DataCallBack,
+        OnBleStateChangeListener, ModelCallBack,
         OnDeviceItemClickListner<BluetoothDevice> {
 
-    private final String TAG = MainActivity.class.getSimpleName();
+    private final String TAG = DemoActivity.class.getSimpleName();
     public final static int MSG_CONNECTED = 0;
     public final static int MSG_DISCONNECTED = 1;
     public final static int MSG_DATA = 2;
@@ -61,6 +60,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 case MSG_DATA:
                     tvData.setText(Arrays.toString(msg.getData().getByteArray("Data")));
+                    break;
                 case MSG_START_CONN_FAILED:
                     tvData.setText("连接失败");
                     break;
@@ -99,22 +99,28 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         scanResultDialog = new BleScanResultDialog();
         scanResultDialog.setOnItemSelectedListener(this);
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
         if (!controller.init()){
             Log.d(TAG, "controller init failed.");
         }
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        controller.release();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        controller.registerReceiver();
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
-        if (controller != null){
-            controller.release();
-        }
+        controller.unregisterReceiver();
     }
 
     @Override
@@ -126,25 +132,28 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_stop_play:
                 break;
             case R.id.btn_connect:
-                if (mCurrentDevice == null){
-                    if (!controller.scan()){
-                        handler.obtainMessage(MSG_START_SCAN_FAILED).sendToTarget();
-                    }else {
-                        scanResultDialog.reset();
-                        scanResultDialog.show(getFragmentManager(), MainActivity.class.getSimpleName());
-                    }
-                }else {
-                    if (!controller.connect(mCurrentDevice)){
-                        handler.obtainMessage(MSG_START_CONN_FAILED).sendToTarget();
-                    }
-                }
-
+                connectDevice(mCurrentDevice);
                 break;
             case R.id.btn_disconnect:
                 controller.disconnect(mCurrentDevice);
                 break;
             default:
                 break;
+        }
+    }
+
+    private void connectDevice(BluetoothDevice device){
+        if (device == null){
+            if (!controller.scan()){
+                handler.obtainMessage(MSG_START_SCAN_FAILED).sendToTarget();
+            }else {
+                scanResultDialog.show(getFragmentManager(), MainActivity.class.getSimpleName());
+            }
+        }else {
+            if (!controller.connect(device)){
+                handler.obtainMessage(MSG_START_CONN_FAILED).sendToTarget();
+            }
+            mCurrentDevice = device;
         }
     }
 
@@ -163,41 +172,43 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onConnected");
         //TODO 连接以后处理
         Message.obtain(handler,MSG_CONNECTED).sendToTarget();
-        mCurrentDevice = device;
     }
 
     @Override
     public void onDisconnected(BluetoothDevice device) {
         Log.d(TAG, "onDisconnected");
         //TODO 断开以后处理
-        Message.obtain(handler,MSG_DISCONNECTED).sendToTarget();
+        Message.obtain(handler, MSG_DISCONNECTED).sendToTarget();
     }
 
     @Override
     public void onScanFoundDevice(BluetoothDevice device) {
-        scanResultDialog.getMyAdapter().add(device);
+        Log.d(TAG, "onScanFoundDevice " + device.getName() + "..." + device.getAddress());
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(scanResultDialog.MSG_DEVICE_KEY, device);
+        Message msg = Message.obtain(scanResultDialog.getmHandler(), scanResultDialog.UI_ADD_DEVICE);
+        msg.setData(bundle);
+        msg.sendToTarget();
     }
 
     @Override
     public void onScanStart() {
-        scanResultDialog.changeState(BleScanResultDialog.UI_STATE_SCANNING);
+        Message.obtain(scanResultDialog.getmHandler(), scanResultDialog.UI_STATE_SCANNING).sendToTarget();
     }
 
     @Override
     public void onScanFinished() {
-        scanResultDialog.changeState(BleScanResultDialog.UI_STATE_FINISHED);
+        Message.obtain(scanResultDialog.getmHandler(), scanResultDialog.UI_STATE_FINISHED).sendToTarget();
     }
 
     @Override
     public void onDeviceChoose(BluetoothDevice device) {
         controller.stopScan();
+        scanResultDialog.dismiss();
         if (device != null){
-            controller.connect(device);
+            mCurrentDevice = device;
+            connectDevice(mCurrentDevice);
         }
     }
 
-    @Override
-    public void onException(DemoException exception) {
-
-    }
 }

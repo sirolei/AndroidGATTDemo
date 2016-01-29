@@ -3,6 +3,8 @@ package com.siro.blesounddemo;
 import android.app.DialogFragment;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,8 +17,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.siro.blesounddemo.strategy.OnItemClickListener;
-import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
+import com.siro.blesounddemo.model.OnDeviceItemClickListner;
 
 import java.util.ArrayList;
 
@@ -30,13 +31,42 @@ public class BleScanResultDialog extends DialogFragment {
     public static final int UI_STATE_SCANNING = 101;
     public static final int UI_STATE_FINISHED = 102;
     public static final int UI_STATE_IDLE = 103;
-
+    public static final int UI_ADD_DEVICE = 104;
+    public static final String MSG_DEVICE_KEY = "device";
     private OnDeviceItemClickListner<BluetoothDevice> listener;
     private MyAdapter myAdapter;
     private ArrayList<BluetoothDevice> arrayList;
     private ProgressBar progressBar;
     private TextView mTitleTv;
     private OnItemClickListener onItemClickListener;
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case UI_ADD_DEVICE:
+                    BluetoothDevice device = msg.getData().getParcelable(MSG_DEVICE_KEY);
+                    if (myAdapter != null){
+                        myAdapter.add(device);
+                    }
+                    break;
+                case UI_STATE_FINISHED:
+                    changeState(UI_STATE_FINISHED);
+                    break;
+                case UI_STATE_IDLE:
+                    changeState(UI_STATE_IDLE);
+                    break;
+                case UI_STATE_SCANNING:
+                    changeState(UI_STATE_SCANNING);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    public Handler getmHandler() {
+        return mHandler;
+    }
 
     public MyAdapter getMyAdapter() {
         return myAdapter;
@@ -59,20 +89,16 @@ public class BleScanResultDialog extends DialogFragment {
         this.listener = listener;
     }
 
-    @Override
-    public void dismiss() {
-        if (listener != null){
-            listener.onDeviceChoose(null);
-        }
-        super.dismiss();
-    }
-
     public void reset(){
         changeState(UI_STATE_IDLE);
         myAdapter.clear();
     }
 
     public void changeState(int state){
+        if (progressBar == null || mTitleTv == null){
+            return;
+        }
+
         switch (state){
             case UI_STATE_FINISHED:
                 progressBar.setVisibility(View.GONE);

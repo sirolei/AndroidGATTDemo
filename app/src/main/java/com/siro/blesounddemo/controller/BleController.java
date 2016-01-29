@@ -11,6 +11,7 @@ import com.siro.blesounddemo.model.OnBleStateChangeListener;
  */
 abstract public class BleController extends Controller<BleModel> {
 
+    private final int SCAN_PERIOD = 20000;
 
     public BleController(Context context) {
         super(context);
@@ -35,7 +36,17 @@ abstract public class BleController extends Controller<BleModel> {
     }
 
     public boolean scan(){
-        return getModel().scan();
+        boolean isStartScan = getModel().scan();
+        // 每次扫描的默认时长为20s
+        if (isStartScan){
+            getUiHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    stopScan();
+                }
+            }, SCAN_PERIOD);
+        }
+        return isStartScan;
     }
 
     public void stopScan(){
@@ -48,6 +59,14 @@ abstract public class BleController extends Controller<BleModel> {
 
     public void release(){
         getModel().releaseModel();
+    }
+
+    public void registerReceiver(){
+        getModel().registerReceiver();
+    }
+
+    public void unregisterReceiver(){
+        getModel().unregisterReceiver();
     }
 
 }

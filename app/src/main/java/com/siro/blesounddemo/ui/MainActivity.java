@@ -23,7 +23,7 @@ import com.siro.blesounddemo.data.consumer.BleGattConsumer;
 import com.siro.blesounddemo.data.producer.BleGattProducer;
 import com.siro.blesounddemo.exception.DemoException;
 import com.siro.blesounddemo.strategy.Connector;
-import com.siro.blesounddemo.strategy.OnDeviceItemClickListner;
+import com.siro.blesounddemo.model.OnDeviceItemClickListner;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Arrays;
