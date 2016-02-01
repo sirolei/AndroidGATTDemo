@@ -1,4 +1,4 @@
-package com.siro.blesounddemo.model;
+package com.siro.blesounddemo;
 
 public interface OnDeviceItemClickListner<T> {
         public void onDeviceChoose(T device);

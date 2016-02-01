@@ -17,7 +17,7 @@ import com.siro.blesounddemo.R;
 import com.siro.blesounddemo.controller.BleGattController;
 import com.siro.blesounddemo.model.ModelCallBack;
 import com.siro.blesounddemo.model.OnBleStateChangeListener;
-import com.siro.blesounddemo.model.OnDeviceItemClickListner;
+import com.siro.blesounddemo.OnDeviceItemClickListner;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Arrays;
@@ -147,7 +147,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
             if (!controller.scan()){
                 handler.obtainMessage(MSG_START_SCAN_FAILED).sendToTarget();
             }else {
-                scanResultDialog.show(getFragmentManager(), MainActivity.class.getSimpleName());
+                scanResultDialog.show(getFragmentManager(), DemoActivity.class.getSimpleName());
             }
         }else {
             if (!controller.connect(device)){

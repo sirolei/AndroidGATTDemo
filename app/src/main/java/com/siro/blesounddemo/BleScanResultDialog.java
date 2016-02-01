@@ -17,8 +17,6 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.siro.blesounddemo.model.OnDeviceItemClickListner;
-
 import java.util.ArrayList;
 
 /**

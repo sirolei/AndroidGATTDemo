@@ -44,6 +44,7 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
 
     @Override
     public void run() {
+        Log.d(TAG, "ble gatt producer start running");
         Looper.prepare();
         mHandler = new Handler(){
             @Override

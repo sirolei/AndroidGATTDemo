@@ -18,4 +18,5 @@ public class BleGattController extends BleController {
     protected BleModel generateModel(Context context) {
         return new BleGattModel(context);
     }
+
 }
