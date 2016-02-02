@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.siro.blesounddemo.BleScanResultDialog;
 import com.siro.blesounddemo.R;
 import com.siro.blesounddemo.controller.BleGattController;
+import com.siro.blesounddemo.data.storage.BleDataStorage;
 import com.siro.blesounddemo.model.ModelCallBack;
 import com.siro.blesounddemo.model.OnBleStateChangeListener;
 import com.siro.blesounddemo.OnDeviceItemClickListner;
@@ -47,7 +48,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
     private TextView loseRate;
     private BleGattController controller;
     private BleScanResultDialog scanResultDialog;
-
+    private boolean isStartAnalyse = false;
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -96,6 +97,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         controller = new BleGattController(this);
         controller.setBleStateChangeListener(this);
         controller.setControllerCallback(this);
+        controller.setStorage(BleDataStorage.getInstance());
         scanResultDialog = new BleScanResultDialog();
         scanResultDialog.setOnItemSelectedListener(this);
 
@@ -172,6 +174,11 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onConnected");
         //TODO 连接以后处理
         Message.obtain(handler,MSG_CONNECTED).sendToTarget();
+        //
+        if (!isStartAnalyse){
+            controller.analyseData();
+            isStartAnalyse = true;
+        }
     }
 
     @Override
@@ -179,6 +186,11 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onDisconnected");
         //TODO 断开以后处理
         Message.obtain(handler, MSG_DISCONNECTED).sendToTarget();
+
+        if (isStartAnalyse){
+            controller.stopAnalyseData();
+            isStartAnalyse = false;
+        }
     }
 
     @Override

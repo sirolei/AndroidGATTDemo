@@ -64,10 +64,6 @@ public class BleGattConsumer extends Thread implements Consumer<byte[]> {
 
     }
 
-    private void handleException(){
-
-    }
-
     public void read(){
         isRead = true;
         try {

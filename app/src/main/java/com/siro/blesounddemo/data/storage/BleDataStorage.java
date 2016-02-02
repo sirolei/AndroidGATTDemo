@@ -39,7 +39,7 @@ public class BleDataStorage implements Storage<byte[]> {
 
     @Override
     public void produce(byte[] product) throws InterruptedException {
-        Log.d(TAG, "produce: " + Arrays.toString(product));
+        Log.d(TAG, "Thread in " + Thread.currentThread().getId() + " produce: " + Arrays.toString(product));
         quenes.put(product);
     }
 

@@ -79,12 +79,18 @@ public class BleGattProducer extends Thread implements Producer<byte[]> {
     }
 
     public void sendMessage(int what, Bundle data){
+        if (mHandler == null){
+            return;
+        }
         Message msg = Message.obtain(mHandler, what);
         msg.setData(data);
         msg.sendToTarget();
     }
 
     public void quit(){
+        if (mHandler == null){
+            return;
+        }
         Looper looper = mHandler.getLooper();
         looper.quit();
     }

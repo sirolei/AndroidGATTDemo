@@ -9,12 +9,11 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.Log;
 
-import com.siro.blesounddemo.data.consumer.BleGattConsumer;
-import com.siro.blesounddemo.data.producer.BleGattProducer;
 import com.siro.blesounddemo.BleConst;
+import com.siro.blesounddemo.data.consumer.BleGattConsumer;
+import com.siro.blesounddemo.data.storage.Storage;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
 import java.util.Timer;
@@ -30,15 +29,26 @@ public class BleGattModel extends BleModel {
     private BluetoothGattCallback gattCallback;
     private BluetoothGatt mBluetoothGatt;
     private BluetoothDevice mConnectDevice;
-    private BleGattProducer producer;
+//    private BleGattProducer producer;
     private BleGattConsumer consumer;
     private int mtuSize = 200;
     private boolean isInit = false;
+    private Storage<byte[]> mStorage;
+
 
     public BleGattModel(Context context) {
         super(context);
-        producer = new BleGattProducer();
+//        producer = new BleGattProducer();
         consumer = new BleGattConsumer();
+    }
+
+    public BleGattModel(Context context, Storage<byte[]> storage){
+        this(context);
+        mStorage = storage;
+    }
+
+    public void setmStorage(Storage<byte[]> storage){
+        mStorage = storage;
     }
 
     private BluetoothGattCallback newGattCallback(){
@@ -78,13 +88,19 @@ public class BleGattModel extends BleModel {
 
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                Log.d(TAG, "onCharacteristicChanged...");
                 if (getCallBack() != null) {
                     getCallBack().onDataReceive(characteristic);
                 }
-                Bundle bundle = new Bundle();
-                bundle.putByteArray("Data", characteristic.getValue());
-                producer.sendMessage(BleGattProducer.MSG_DATA, bundle);
+//                Bundle bundle = new Bundle();
+//                bundle.putByteArray("Data", characteristic.getValue());
+//                producer.sendMessage(BleGattProducer.MSG_DATA, bundle);
+                if (mStorage != null){
+                    try {
+                        mStorage.produce(characteristic.getValue());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override
@@ -193,7 +209,7 @@ public class BleGattModel extends BleModel {
     public boolean initModel() {
         isInit = super.initModel();
         if (isInit) {
-            producer.start();
+//            producer.start();
             consumer.start();
         }
         return isInit;
@@ -202,7 +218,7 @@ public class BleGattModel extends BleModel {
     @Override
     public void releaseModel() {
         if (isInit) {
-            producer.quit();
+//            producer.quit();
             consumer.quit();
         }
         isInit = false;
@@ -218,5 +234,17 @@ public class BleGattModel extends BleModel {
 
     public void setMtuSize(int mtuSize) {
         this.mtuSize = mtuSize;
+    }
+
+    public void analyseData(){
+        if (consumer != null){
+            consumer.read();
+        }
+    }
+
+    public void stopAnalyseData(){
+        if (consumer != null){
+            consumer.close();
+        }
     }
 }
