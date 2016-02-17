@@ -11,26 +11,27 @@ import android.os.Build;
 
 import com.siro.blesounddemo.BluetoothScanReceiver;
 
+import java.util.ArrayList;
+
 /**
  * Created by siro on 2016/1/27.
  */
 abstract public class BleModel extends Model implements BluetoothScanReceiver.OnBluetoothReceiveInterface {
 
     private BluetoothAdapter mBluetoothAdapter;
-    private OnBleStateChangeListener listener;
+    protected ArrayList<BleStateObserver> observers;
     private BluetoothScanReceiver receiver;
-    private Context context;
     private Object scanCallback;
     private Object leCallback;
 
-    public BleModel(Context context) {
-        this.context = context;
+    public BleModel() {
+        observers = new ArrayList<BleStateObserver>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             scanCallback = new ScanCallback() {
                 @Override
                 public void onScanResult(int callbackType, ScanResult result) {
-                    if (listener != null) {
-                        listener.onScanFoundDevice(result.getDevice());
+                    for (BleStateObserver observer : observers){
+                        observer.onScanFoundDevice(result.getDevice());
                     }
                 }
             };
@@ -40,28 +41,22 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
             leCallback = new BluetoothAdapter.LeScanCallback() {
                 @Override
                 public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    if (listener != null) {
-                        listener.onScanFoundDevice(device);
+                    for (BleStateObserver observer : observers){
+                        observer.onScanFoundDevice(device);
                     }
                 }
             };
         }
     }
 
-    public Context getContext() {
-        return context;
-    }
-
-    public OnBleStateChangeListener getBleStateChangeListener() {
-        return listener;
-    }
-
-    public void setBleStateChangeListener(OnBleStateChangeListener listner) {
-        this.listener = listner;
+    public void addBleStateObserver(BleStateObserver observer) {
+        if (!observers.contains(observer)){
+            observers.add(observer);
+        }
     }
 
     @Override
-    public boolean initModel() {
+    public boolean initModel(Context context) {
 
         /*
         * 初始化bluetoothAdapter
@@ -97,11 +92,11 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
         mBluetoothAdapter = null;
     }
 
-    public void registerReceiver() {
+    public void registerReceiver(Context context) {
         receiver.registerBleReceiver(context);
     }
 
-    public void unregisterReceiver() {
+    public void unregisterReceiver(Context context) {
         if (receiver != null) {
             receiver.unregisterBleReceiver(context);
         }
@@ -141,8 +136,8 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
             onDiscoverStart();
         }
         return isStart;
-
     }
+
 
     /*
     * 停止扫描
@@ -180,29 +175,29 @@ abstract public class BleModel extends Model implements BluetoothScanReceiver.On
 
     @Override
     public void onDiscoverStart() {
-        if (listener != null) {
-            listener.onScanStart();
+        for (BleStateObserver observer : observers){
+            observer.onScanStart();
         }
     }
 
     @Override
     public void onDiscoverFinish() {
-        if (listener != null) {
-            listener.onScanFinished();
+        for (BleStateObserver observer : observers){
+            observer.onScanFinished();
         }
     }
 
     @Override
     public void onDiscoverFound(BluetoothDevice device) {
-        if (listener != null) {
-            listener.onScanFoundDevice(device);
+        for (BleStateObserver observer : observers){
+            observer.onScanFoundDevice(device);
         }
     }
 
     /*
     * 子类应该实现如何连接/断开，是gatt方式还是spp方式等。
     * */
-    abstract public boolean connect(BluetoothDevice device);
+    abstract public boolean connect(Context context, BluetoothDevice device);
     abstract public void disconnect(BluetoothDevice device);
 
 }

@@ -17,7 +17,7 @@ import com.siro.blesounddemo.R;
 import com.siro.blesounddemo.controller.BleGattController;
 import com.siro.blesounddemo.data.storage.BleDataStorage;
 import com.siro.blesounddemo.model.ModelCallBack;
-import com.siro.blesounddemo.model.OnBleStateChangeListener;
+import com.siro.blesounddemo.model.BleStateObserver;
 import com.siro.blesounddemo.OnDeviceItemClickListner;
 import com.siro.blesounddemo.util.SystemInfoUtil;
 
@@ -27,7 +27,7 @@ import java.util.Arrays;
  * Created by siro on 2016/1/28.
  */
 public class DemoActivity extends AppCompatActivity implements View.OnClickListener,
-        OnBleStateChangeListener, ModelCallBack,
+        BleStateObserver, ModelCallBack,
         OnDeviceItemClickListner<BluetoothDevice> {
 
     private final String TAG = DemoActivity.class.getSimpleName();
@@ -94,14 +94,14 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         btnStop.setOnClickListener(this);
         Log.d(TAG, "cpu factory " + SystemInfoUtil.getCpuFactoryName());
 
-        controller = new BleGattController(this);
-        controller.setBleStateChangeListener(this);
+        controller = new BleGattController();
+        controller.addBleStateObserver(this);
         controller.setControllerCallback(this);
         controller.setStorage(BleDataStorage.getInstance());
         scanResultDialog = new BleScanResultDialog();
         scanResultDialog.setOnItemSelectedListener(this);
 
-        if (!controller.init()){
+        if (!controller.init(this)){
             Log.d(TAG, "controller init failed.");
         }
     }
@@ -116,13 +116,13 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStart() {
         super.onStart();
-        controller.registerReceiver();
+        controller.registerReceiver(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        controller.unregisterReceiver();
+        controller.unregisterReceiver(this);
     }
 
     @Override
@@ -139,6 +139,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_disconnect:
                 controller.disconnect(mCurrentDevice);
                 break;
+
             default:
                 break;
         }
@@ -150,9 +151,16 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
                 handler.obtainMessage(MSG_START_SCAN_FAILED).sendToTarget();
             }else {
                 scanResultDialog.show(getFragmentManager(), DemoActivity.class.getSimpleName());
+                // 12s超时后停止扫描
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        controller.stopScan();
+                    }
+                }, 12000);
             }
         }else {
-            if (!controller.connect(device)){
+            if (!controller.connect(this, device)){
                 handler.obtainMessage(MSG_START_CONN_FAILED).sendToTarget();
             }
             mCurrentDevice = device;

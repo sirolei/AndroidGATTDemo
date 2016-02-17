@@ -36,19 +36,20 @@ public class BleGattModel extends BleModel {
     private Storage<byte[]> mStorage;
 
 
-    public BleGattModel(Context context) {
-        super(context);
+    public BleGattModel() {
 //        producer = new BleGattProducer();
         consumer = new BleGattConsumer();
     }
 
-    public BleGattModel(Context context, Storage<byte[]> storage){
-        this(context);
+    public BleGattModel(Storage<byte[]> storage){
+        this();
+        consumer.setStorage(storage);
         mStorage = storage;
     }
 
-    public void setmStorage(Storage<byte[]> storage){
+    public void setStorage(Storage<byte[]> storage){
         mStorage = storage;
+        consumer.setStorage(storage);
     }
 
     private BluetoothGattCallback newGattCallback(){
@@ -59,13 +60,15 @@ public class BleGattModel extends BleModel {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if (newState == BluetoothProfile.STATE_CONNECTED) {
                         gatt.discoverServices();
-                        if (getBleStateChangeListener() != null) {
-                            getBleStateChangeListener().onConnected(mConnectDevice);
+                        for (BleStateObserver observer : observers){
+                            observer.onConnected(mConnectDevice);
                         }
                     }
 
-                    if (newState == BluetoothProfile.STATE_DISCONNECTED && getBleStateChangeListener() != null) {
-                        getBleStateChangeListener().onDisconnected(mConnectDevice);
+                    if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        for (BleStateObserver observer : observers){
+                            observer.onDisconnected(mConnectDevice);
+                        }
                     }
                 }
             }
@@ -179,14 +182,14 @@ public class BleGattModel extends BleModel {
     }
 
     @Override
-    public boolean connect(BluetoothDevice device) {
+    public boolean connect(Context context, BluetoothDevice device) {
         if (device == null) {
             return false;
         }
 
         if (mConnectDevice != device){
             gattCallback = newGattCallback();
-            mBluetoothGatt = device.connectGatt(getContext(), false, gattCallback);
+            mBluetoothGatt = device.connectGatt(context, false, gattCallback);
         }
 
         if (mBluetoothGatt != null) {
@@ -206,8 +209,8 @@ public class BleGattModel extends BleModel {
     }
 
     @Override
-    public boolean initModel() {
-        isInit = super.initModel();
+    public boolean initModel(Context context) {
+        isInit = super.initModel(context);
         if (isInit) {
 //            producer.start();
             consumer.start();

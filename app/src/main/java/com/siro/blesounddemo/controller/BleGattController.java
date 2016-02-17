@@ -1,7 +1,5 @@
 package com.siro.blesounddemo.controller;
 
-import android.content.Context;
-
 import com.siro.blesounddemo.data.storage.Storage;
 import com.siro.blesounddemo.model.BleGattModel;
 import com.siro.blesounddemo.model.BleModel;
@@ -11,28 +9,24 @@ import com.siro.blesounddemo.model.BleModel;
  */
 public class BleGattController extends BleController {
 
-    public BleGattController(Context context) {
-        super(context);
-    }
-
     @Override
-    protected BleModel generateModel(Context context) {
-        return new BleGattModel(context);
+    protected BleModel generateModel() {
+        return new BleGattModel();
     }
 
     public void analyseData(){
-        BleGattModel model = (BleGattModel) getModel();
+        BleGattModel model = (BleGattModel) mModel;
         model.analyseData();
     }
 
     public void stopAnalyseData(){
-        BleGattModel model = (BleGattModel) getModel();
+        BleGattModel model = (BleGattModel) mModel;
         model.stopAnalyseData();
     }
 
     public void setStorage(Storage<byte[]> storage){
-        BleGattModel model = (BleGattModel)getModel();
-        model.setmStorage(storage);
+        BleGattModel model = (BleGattModel)mModel;
+        model.setStorage(storage);
     }
 
 }

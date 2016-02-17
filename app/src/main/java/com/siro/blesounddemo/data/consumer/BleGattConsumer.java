@@ -3,6 +3,7 @@ package com.siro.blesounddemo.data.consumer;
 import android.util.Log;
 
 import com.siro.blesounddemo.data.storage.BleDataStorage;
+import com.siro.blesounddemo.data.storage.Storage;
 import com.siro.blesounddemo.util.FileUtil;
 
 import java.io.FileNotFoundException;
@@ -43,6 +44,9 @@ public class BleGattConsumer extends Thread implements Consumer<byte[]> {
         return null;
     }
 
+    public void setStorage(Storage<byte[]> storage){
+        this.storage = (BleDataStorage) storage;
+    }
 
 
     @Override

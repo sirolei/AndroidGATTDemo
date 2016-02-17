@@ -4,69 +4,51 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import com.siro.blesounddemo.model.BleModel;
-import com.siro.blesounddemo.model.OnBleStateChangeListener;
+import com.siro.blesounddemo.model.BleStateObserver;
 
 /**
  * Created by siro on 2016/1/27.
  */
 abstract public class BleController extends Controller<BleModel> {
 
-    private final int SCAN_PERIOD = 20000;
 
-    public BleController(Context context) {
-        super(context);
+    abstract protected BleModel generateModel();
+
+    public void addBleStateObserver(BleStateObserver observer) {
+        mModel.addBleStateObserver(observer);
     }
 
-    abstract protected BleModel generateModel(Context context);
-
-    public OnBleStateChangeListener getBleStateChangeListener() {
-        return getModel().getBleStateChangeListener();
-    }
-
-    public void setBleStateChangeListener(OnBleStateChangeListener listener) {
-        getModel().setBleStateChangeListener(listener);
-    }
-
-    public boolean connect(BluetoothDevice device){
-        return getModel().connect(device);
+    public boolean connect(Context context, BluetoothDevice device){
+        return mModel.connect(context, device);
     }
 
     public void disconnect(BluetoothDevice device){
-        getModel().disconnect(device);
+        mModel.disconnect(device);
     }
 
     public boolean scan(){
-        boolean isStartScan = getModel().scan();
-        // 每次扫描的默认时长为20s
-        if (isStartScan){
-            getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    stopScan();
-                }
-            }, SCAN_PERIOD);
-        }
+        boolean isStartScan = mModel.scan();
         return isStartScan;
     }
 
     public void stopScan(){
-        getModel().stopScan();
+        mModel.stopScan();
     }
 
-    public boolean init(){
-        return  getModel().initModel();
+    public boolean init(Context context){
+        return  mModel.initModel(context);
     }
 
     public void release(){
-        getModel().releaseModel();
+        mModel.releaseModel();
     }
 
-    public void registerReceiver(){
-        getModel().registerReceiver();
+    public void registerReceiver(Context context){
+        mModel.registerReceiver(context);
     }
 
-    public void unregisterReceiver(){
-        getModel().unregisterReceiver();
+    public void unregisterReceiver(Context context){
+        mModel.unregisterReceiver(context);
     }
 
 }
