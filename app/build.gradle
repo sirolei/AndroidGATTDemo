@@ -11,13 +11,71 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    signingConfigs {
+        release {
+            storeFile file("../changhong.key")
+            keyAlias "changhong"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
+// 配置sign key.
+task getReleasePassword << {
+    def storePassword = ''
+    def keyPassword = ''
+    if (rootProject.file('private.properties').exists()){
+        Properties properties = new Properties();
+        properties.load(rootProject.file('private.properties').newDataInputStream())
+        storePassword = properties.getProperty('release.password')
+        keyPassword = properties.getProperty('release.keypassword')
+    }
+
+    if (!storePassword?.trim()) {
+        def systemConsole = System.console()
+        if (systemConsole == null){
+            System.err.println('Please check file private.properties in root project directory, there must be properties storePassword')
+        }else {
+            storePassword = new String(systemConsole.readPassword
+                    ("\nWhat's the keystore password? "))
+        }
+    }
+
+    if (!keyPassword?.trim()) {
+        def systemConsole = System.console()
+        if (systemConsole == null){
+            System.err.println('Please check file private.properties in root project directory, there must be properties storePassword')
+        }else {
+            keyPassword = new String(System.console().readPassword
+                    ("\nWhat's the key password? "))
+        }
+    }
+
+    android.signingConfigs.release.storePassword = storePassword
+    android.signingConfigs.release.keyPassword = keyPassword
+}
+
+tasks.whenTaskAdded { theTask ->
+    if (theTask.name.equals("packageRelease")) {
+        theTask.dependsOn "getReleasePassword"
+    }
+}
+
+//配置apk 名字带versionName
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        def file = output.outputFile
+        output.outputFile = new File(file.parent, file.name.replace(".apk","-${variant.versionName}.apk"))
+    }
+}
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
