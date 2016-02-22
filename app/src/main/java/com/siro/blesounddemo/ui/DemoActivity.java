@@ -12,14 +12,14 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.changhong.ancareble.controller.BleGattController;
+import com.changhong.ancareble.data.consumer.DataConsumeInterface;
+import com.changhong.ancareble.model.BleStateObserver;
+import com.changhong.ancareble.model.ModelCallBack;
+import com.changhong.ancareble.util.SystemInfoUtil;
 import com.siro.blesounddemo.BleScanResultDialog;
-import com.siro.blesounddemo.R;
-import com.siro.blesounddemo.controller.BleGattController;
-import com.siro.blesounddemo.data.storage.BleDataStorage;
-import com.siro.blesounddemo.model.ModelCallBack;
-import com.siro.blesounddemo.model.BleStateObserver;
 import com.siro.blesounddemo.OnDeviceItemClickListner;
-import com.siro.blesounddemo.util.SystemInfoUtil;
+import com.siro.blesounddemo.R;
 
 import java.util.Arrays;
 
@@ -74,6 +74,14 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
+    private DataConsumeInterface dataConsumeInterface = new DataConsumeInterface() {
+        @Override
+        public void consumeData(Object object) {
+            //TODO 在此定义如何处理数据
+            Log.d(TAG, "consumeData in UI");
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,9 +103,9 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "cpu factory " + SystemInfoUtil.getCpuFactoryName());
 
         controller = new BleGattController();
-        controller.addBleStateObserver(this);
-        controller.setControllerCallback(this);
-        controller.setStorage(BleDataStorage.getInstance());
+        controller.registerBleStateObserver(this);
+        controller.registerMetaDataCallBack(this);
+        controller.addDataConsumerInter(dataConsumeInterface);
         scanResultDialog = new BleScanResultDialog();
         scanResultDialog.setOnItemSelectedListener(this);
 
@@ -110,6 +118,9 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        controller.unregisterBleStateObserver(this);
+        controller.unregisterMetaDataCallBack(this);
+        controller.removeDataConsumerInter(dataConsumeInterface);
         controller.release();
     }
 
